@@ -1,0 +1,9 @@
+# ide
+.idea
+
+# npm
+node_modules
+
+# aoc
+secret.js
+**/*-input.txt

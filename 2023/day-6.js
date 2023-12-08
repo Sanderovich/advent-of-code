@@ -1,10 +1,7 @@
-const input = `
-Time:        48     87     69     81
-Distance:   255   1288   1117   1623`;
+import { getInput } from "../get-input.js";
 
-const lines = input
-	.trim()
-	.split(/\n/)
+const input = await getInput({ year: 2023, day: 6 });
+const lines = input.trim().split(/\n/);
 
 const step = r => {
 	const total = r.reduce((acc, [ time, distance ]) => {
