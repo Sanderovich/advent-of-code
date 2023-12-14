@@ -21,6 +21,8 @@ const RIGHT = 2;
 const UP = 3;
 const DOWN = 4;
 
+const between = (p, a, b) => p >= a && p <= b || p <= a && p >= b;
+
 const adjacents = [
 	{ x: 0,  y: -1, direction: UP },
 	{ x: -1, y: 0,  direction: LEFT },
@@ -106,48 +108,48 @@ const first = () => {
 
 const second = () => {
 	const path = getPath();
-	const map = path.reduce((acc, { x, y }) => acc.set(`${x}:${y}`, true), new Map());
-	const rows = path
-		.reduce((acc, { x, y, char }) => {
-			if (!acc[y]) {
-				acc[y] = [];
-			}
+	const map = path.reduce((acc, { x, y, char }) => acc.set(`${x}:${y}`, char), new Map());
 
-			acc[y].push({ x, char });
-			acc[y].sort((a, b) => a.x - b.x);
-			return acc;
-		}, {});
-
-	let total = 0;
-
-	function relationPP(P, polygon) {
-		const between = (p, a, b) => p >= a && p <= b || p <= a && p >= b
+	function isInside(p, polygon) {
 		let inside = false
-		for (let i = polygon.length-1, j = 0; j < polygon.length; i = j, j++) {
-			const A = polygon[i]
-			const B = polygon[j]
-			// corner cases
-			if (P.x == A.x && P.y == A.y || P.x == B.x && P.y == B.y) return 0
-			if (A.y == B.y && P.y == A.y && between(P.x, A.x, B.x)) return 0
 
-			if (between(P.y, A.y, B.y)) { // if P inside the vertical range
-				// filter out "ray pass vertex" problem by treating the line a little lower
-				if (P.y == A.y && B.y >= A.y || P.y == B.y && A.y >= B.y) continue
-				// calc cross product `PA X PB`, P lays on left side of AB if c > 0
-				const c = (A.x - P.x) * (B.y - P.y) - (B.x - P.x) * (A.y - P.y)
-				if (c == 0) return 0
-				if ((A.y < B.y) == (c > 0)) inside = !inside
+		for (let i = polygon.length - 1, j = 0; j < polygon.length; i = j, j++) {
+			const a = polygon[i]
+			const b = polygon[j]
+
+			if (equal(p, a) || equal(p, b)) return false
+			if (a.y === b.y && p.y === a.y && between(p.x, a.x, b.x)) return false
+
+			if (between(p.y, a.y, b.y)) {
+				if (p.y === a.y && b.y >= a.y || p.y === b.y && a.y >= b.y) continue
+
+				const c = (a.x - p.x) * (b.y - p.y) - (b.x - p.x) * (a.y - p.y)
+				if (c === 0) return false
+				if ((a.y < b.y) === (c > 0)) inside = !inside
 			}
 		}
 
-		return inside? 1 : -1
+		return inside;
 	}
+
+	let total = 0;
 
 	for (let y = 0; y < grid.length; y++) {
 		for (let x = 0; x < grid[0].length; x++) {
 			if (map.has(`${x}:${y}`)) continue;
-			const result = relationPP({ x, y }, path);
-			if (result === 1) {
+
+			let hits = 0;
+			for (let xx = x + 1; xx < grid[0].length; xx++) {
+				const item = map.get(`${xx}:${y}`);
+				if (item === '|') {
+					hits++;
+				} else if (item !== undefined) {
+					hits--;
+				}
+			}
+
+			if (hits >= 0 && hits % 2 !== 0) {
+				console.log(`${x}:${y}`);
 				total++;
 			}
 		}
